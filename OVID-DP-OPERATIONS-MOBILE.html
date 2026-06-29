@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OVID -- DP Operations (OVIQ4 Ch.15)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, Arial, sans-serif; font-size: 14px; background: #f0f2f5; color: #1a2a3a; }
+.header { background: #003B6E; color: white; padding: 12px 16px; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.btn-row { display: flex; gap: 8px; padding: 12px; }
+.btn { flex: 1; padding: 11px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-save { background: #27ae60; color: white; }
+.btn-pdf { background: #e67e22; color: white; }
+.meta-card { background: white; margin: 0 12px 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.meta-card h2 { font-size: 11px; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 0.5px; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.meta-field label { display: block; font-size: 10px; text-transform: uppercase; color: #888; margin-bottom: 3px; font-weight: 600; }
+.meta-field input, .meta-field select { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px 9px; font-size: 13px; }
+.meta-field.full { grid-column: 1 / -1; }
+.section { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden; }
+.section-title { background: #003B6E; color: white; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+.question { border-bottom: 1px solid #eef1f5; padding: 14px; }
+.question:last-child { border-bottom: none; }
+.q-header { display: flex; gap: 10px; margin-bottom: 8px; }
+.q-num { background: #003B6E; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; white-space: nowrap; align-self: flex-start; margin-top: 1px; }
+.q-text { font-size: 13px; line-height: 1.5; font-weight: 600; }
+.guidance { font-size: 11px; color: #555; background: #f0f5ff; border-left: 3px solid #003B6E; padding: 7px 10px; border-radius: 0 4px 4px 0; margin-bottom: 8px; line-height: 1.4; }
+.ref { font-size: 10px; color: #003B6E; font-weight: 700; margin-top: 4px; }
+.answer-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ans { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.yes-lbl { border-color: #27ae60; color: #27ae60; }
+.no-lbl { border-color: #e74c3c; color: #e74c3c; }
+.na-lbl { border-color: #7f8c8d; color: #7f8c8d; }
+.obs-row { margin-bottom: 6px; font-size: 12px; }
+textarea { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px; font-size: 12px; resize: vertical; }
+.general-obs { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 14px; }
+.general-obs h3 { font-size: 12px; text-transform: uppercase; color: #c0392b; font-weight: 700; margin-bottom: 8px; }
+.general-obs textarea { min-height: 80px; }
+.warning { margin: 0 12px 12px; background: #fff3cd; border-left: 4px solid #f0ad4e; padding: 10px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #856404; }
+@media print {
+  .btn-row, .warning { display: none; }
+  .header { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section-title { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; }
+  .meta-card, .section, .general-obs { box-shadow: none; border: 1px solid #ddd; margin: 0 0 8px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>&#128301; OVID -- DP Operations (OVIQ4 Ch.15)</h1>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<div class="warning">&#9888; Do not close this file without saving. All answers will be lost.</div>
+<div class="meta-card">
+  <h2>Inspection Details</h2>
+  <div class="meta-grid">
+    <div class="meta-field"><label>Vessel Name</label><input type="text" name="vessel" placeholder="e.g. Bourbon Evolution 805"></div>
+    <div class="meta-field"><label>Inspection Date</label><input type="date" name="insp_date"></div>
+    <div class="meta-field"><label>Inspector</label><input type="text" name="inspector" placeholder="Name"></div>
+    <div class="meta-field"><label>Operator</label><input type="text" name="operator" placeholder="Company"></div>
+    <div class="meta-field"><label>Flag State</label><input type="text" name="flag" placeholder="Flag"></div>
+    <div class="meta-field"><label>IMO Number</label><input type="text" name="imo" placeholder="IMO #"></div>
+    <div class="meta-field"><label>Port / Location</label><input type="text" name="port" placeholder="Location"></div>
+    <div class="meta-field"><label>Block / Field</label><input type="text" name="block" placeholder="e.g. Block 17"></div>
+    <div class="meta-field full"><label>Inspection Status</label>
+      <select name="status"><option>In Progress</option><option>Completed</option><option>Suspended</option></select>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">15.1 -- General</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.1</span>
+    <span class="q-text">Does the vessel have on board a copy of the most recent DP FMEA (DP FMEA Desktop analysis)?</span>
+  </div>
+  <div class="guidance">Record the date of the report and the name of the issuing company.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.2</span>
+    <span class="q-text">Is the latest DP FMEA revision less than 5 years old and/or has there been a third party gap analysis been completed within the last 5 years stating the DP FMEA is still valid?</span>
+  </div>
+  <div class="guidance">Both IMO and IMCA guidance state that formal review of the DP FMEA shall be completed within a 5-year period.<div class="ref">IMO MSC.1/Circ.1580; IMCA M 166; IMCA Information Note 1605</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.3</span>
+    <span class="q-text">Have any modifications been sighted/reported to the DP mission critical equipment since the last DP FMEA revision. If applicable, have any modifications been proven by testing?</span>
+  </div>
+  <div class="guidance">IMCA M 166 states: "The FMEA will become out of date if it is not maintained regularly and systematically, due to changes in operating procedures, modifications to DP hardware and software, to confirm compliance with the latest industry guidance, etc., over the life cycle of the vessel. A systematic FMEA review through the vessel's life cycle should be an ongoing process which should be formally completed at least once every five years."<div class="ref">IMCA M 166, Chapter 2.7 Updating of an FMEA</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.4</span>
+    <span class="q-text">Is a copy of the latest DP FMEA Proving Trials (5-yearly DP FMEA verification trials) available on board and is it less than 5 years old?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.5</span>
+    <span class="q-text">Are the latest revisions of the FMEA Report and DP FMEA Proving Trials approved by class?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.6</span>
+    <span class="q-text">Have the findings (if any) from the latest DP FMEA Proving Trials been addressed?</span>
+  </div>
+  <div class="guidance">Record the date and issuing company of the DP FMEA proving trials.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.7</span>
+    <span class="q-text">Does the vessel have on board a copy of the most recent DP Annual Trials report?</span>
+  </div>
+  <div class="guidance">Record the date of the report, issuing company and specify if the DP annual trials were performed remotely, semi-remotely or as an on-board trial. The DP annual trials should be conducted as per IMCA M190.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.8</span>
+    <span class="q-text">Have the latest DP Trials been completed within the window?</span>
+  </div>
+  <div class="guidance">If there has been no DP Annual trials and or proving trials within the last 15 months, leave an observation. If there has not been DP trials in the last 12 months please comment. The Annual DP trials and or DP Proving trials should be carried out within three (3) months before or after each anniversary date of the Dynamic Positioning Verification Acceptance Document.<div class="ref">IMCA M190; IMCA M103</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.9</span>
+    <span class="q-text">Have recommendations from the annual DP trial report been addressed and closed out as required?</span>
+  </div>
+  <div class="guidance">If there are any outstanding A/B findings, record it as an observation and provide detail.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.10</span>
+    <span class="q-text">Have all personnel involved in DP operations read and understood the DP FMEA?</span>
+  </div>
+  <div class="guidance">Confirm that the DPO's have signed an acknowledgement form.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.11</span>
+    <span class="q-text">Is there a valid software maintenance agreement(s) in place?</span>
+  </div>
+  <div class="guidance">The following systems to be covered: DP control system; Power system; Thruster system. The software maintenance agreement should cover safety and security patches, obsolescence management, incident reporting and response handling, software change handling and software asset inventory. A statement of product status and maintainability may be accepted as an alternative.<div class="ref">DNV-RP-0582 and IMCA M 103</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.12</span>
+    <span class="q-text">Do the vessel procedures require a minimum of two DP operators to be on duty during DP operations?</span>
+  </div>
+  <div class="guidance">Check that there is sufficient qualified DPOs to provide rest/meal relief (if applicable).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.1.13</span>
+    <span class="q-text">Is the bridge access restricted to only essential personnel during DP operations?</span>
+  </div>
+  <div class="guidance">Check that bridge restrictions are implemented - i.e. by sign, procedures or standing orders.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_1_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_1_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_1_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_1_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_1_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">15.2 -- Operations</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.1</span>
+    <span class="q-text">In the last 12 months has the vessel operated without experiencing any loss of position incidents?</span>
+  </div>
+  <div class="guidance">If the vessel has recorded any Yellow or Red condition DP alarms. Inspector to note and record all such incidents.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.2</span>
+    <span class="q-text">Is the vessel without any defects which result in a reduction of DP Capability and/or redundancy?</span>
+  </div>
+  <div class="guidance">Record any DP mission critical equipment which is not operating as expected.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.3</span>
+    <span class="q-text">Does the vessel use the IMCA Incident reporting system?</span>
+  </div>
+  <div class="guidance">Both Members and non-Members of IMCA are asked to submit reports on the following: DP Incident; DP Undesired Event; DP Observation. If recent reports are not available check that the vessel's management system requires IMCA DP incident reporting.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.4</span>
+    <span class="q-text">Does the vessel carry out risk assessments for specific operations (as listed in guidance)?</span>
+  </div>
+  <div class="guidance">Risk assessments shall cover: SIMOPS; External loads such as tuggers; Weather related contingencies, etc.; Weather side working; Environmental / Shallow water operation; Heavy lift operation.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.5</span>
+    <span class="q-text">Are Manual thruster control levers and emergency stops located within easy reach of the DPO and are each emergency stop well protected against inadvertent operation?</span>
+  </div>
+  <div class="guidance">For vessels build after June 2017, IMO MSC.1 Circ. 1580, Section 3.3.6 states that "individual thruster emergency stop systems should be arranged in the DP control station". Regardless of above guidance, inspector should write an observation if each thruster does not have an individual emergency stop and/or emergency stops / control levers are not within easy reach of DPO.<div class="ref">IMO MSC.1 Circ. 1580</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.6</span>
+    <span class="q-text">Can the health of the position reference systems be monitored by the DPO, independently of the DP control station?</span>
+  </div>
+  <div class="guidance">Inspector to comment if DPO needs to leave the immediate vicinity of the DP desk to view health information.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.7</span>
+    <span class="q-text">Does the vessel have a vessel specific DP Operation manual on board and is there evidence that relevant DP personnel has read the document?</span>
+  </div>
+  <div class="guidance"><div class="ref">IMCA M109; IMO Resolution 645 (Operational Requirement); IMO MSC.1/Circ. 1580</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.8</span>
+    <span class="q-text">Does the DP operations procedure include specific guidance for any DP specific operations that the vessel will conduct, e.g. Anchor Handling, Towing, Heavy Lift, Diving, Pipelay, etc?</span>
+  </div>
+  <div class="guidance">Procedure should address when and where DP is used and the checks required prior to use.<div class="ref">OCIMF Dynamic Positioning Assurance Framework Information paper</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.9</span>
+    <span class="q-text">Is there a competence scheme for key DP personnel onboard?</span>
+  </div>
+  <div class="guidance">This could be a in-house training scheme.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.10</span>
+    <span class="q-text">Are DP checklists in place to cover bridge, engine room and electrical systems for DP operations?</span>
+  </div>
+  <div class="guidance">Checklists can include DP setup (Bridge and engine) / 500 m safety zone entry (Bridge and engine) / Field arrival / DPO and engine room periodical handovers.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.11</span>
+    <span class="q-text">Are DP Capability Plots in place to cover the normal and expected operations, and worst case failure?</span>
+  </div>
+  <div class="guidance"><div class="ref">IMCA M 140 "Specification for DP Capability Plots"; Marine Technology Society DP Operations Guidance</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.12</span>
+    <span class="q-text">Are DP footprints regularly recorded and compared against previous footprints and the DP Capability Plots?</span>
+  </div>
+  <div class="guidance">Check that the operator has guidance for recording DP footprints and specifies frequency of recording.<div class="ref">IMCA M 140 - Specification for DP Capability Plots and MTS Operations Guidance DP Footprint Plots</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.13</span>
+    <span class="q-text">Depending on vessel activity and if required, are Activity Specific Operating Guidelines (ASOG) or Well Specific Operations Guidelines (WSOG) or Field Specific Operations Guidelines (FSOG) in place and utilised?</span>
+  </div>
+  <div class="guidance">Check that: All relevant parties are aware of the specific operating guidelines (ASOG, CAMO, TAM etc); There are defined limits set for Green, yellow and red DP operations; DP cessation triggers are clearly defined within specific operating guidelines; Consequence analysis alarms are used as an input to the specific operating guidelines. Inspector to record an observation if specific operating guidelines are not readably available at DP control station.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.14</span>
+    <span class="q-text">Is the DP control console located so that the DPO can also observe the controls, the external environment and the working operations of the vessel/unit?</span>
+  </div>
+  <div class="guidance">If 'No', state whether CCTV is utilised.<div class="ref">IMCA M 103</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.2.15</span>
+    <span class="q-text">Is the DP alert triggering system in immediate reach of the DPO at console?</span>
+  </div>
+  <div class="guidance">The DP Alert System is used during critical operations such as diving, drilling, pipelaying, walk-to-work or other critical operations and includes traffic lights.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_2_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_2_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_2_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_2_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_2_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">15.3 -- Equipment</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.1</span>
+    <span class="q-text">Is the Dynamic Positioning control systems in good order?</span>
+  </div>
+  <div class="guidance">Note any recommendations/deficiencies reported.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.2</span>
+    <span class="q-text">Are all position reference systems in good order and are both relative and absolute position references available on the vessel for the applicable operations vessel likely to conduct?</span>
+  </div>
+  <div class="guidance">IMCA M 252 summarises best practice for the selection and use of position reference systems (PRS) and sensors in dynamic positioning (DP) control systems.<div class="ref">IMCA M 252</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.3</span>
+    <span class="q-text">If a DP data recorder is not fitted, confirm that procedures are in place for securing relevant data in the event of a DP incident?</span>
+  </div>
+  <div class="guidance"><div class="ref">IMCA M 103</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.4</span>
+    <span class="q-text">Is there a procedure and evidence of the regular checking of the secure power supply systems (UPS Battery systems)?</span>
+  </div>
+  <div class="guidance">Planned maintenance routines should exist for the UPS/s.<div class="ref">IMCA M 190</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.5</span>
+    <span class="q-text">Does the DP system have a continuous analysis function checking that in terms of thruster and power can maintain position after the worst case failure (consequence analysis function)?</span>
+  </div>
+  <div class="guidance"><div class="ref">IMCA M 103</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.6</span>
+    <span class="q-text">Is the DP control system fitted with real time DP capability envelopes or does the vessel have procedure to do a drift off test prior to DP operation?</span>
+  </div>
+  <div class="guidance">Inspector to record in comments if active monitoring or drift off test is used.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.7</span>
+    <span class="q-text">Is the actual bus bar configuration in accordance with the FMEA and the last DP trials performed?</span>
+  </div>
+  <div class="guidance">Inspector should state whether the bus ties are open or closed configuration for each mode of DP operation (i.e. Mode 1, 2 etc).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.8</span>
+    <span class="q-text">Is the DP control system included within the Planned Maintenance System?</span>
+  </div>
+  <div class="guidance">Including all position reference systems, UPSs and sensors.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.9</span>
+    <span class="q-text">If unit is a DP flotel fitted with a connected gangway, confirm that the gangway is used as Positioning Reference System (PRS)?</span>
+  </div>
+  <div class="guidance">Record an observation if gangway is not used as a PRS.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.3.10</span>
+    <span class="q-text">If the unit is a DP flotel operating on a turret moored FPSO or any moving asset with connected gangway, confirm that DP system is fitted with "follow target" mode option?</span>
+  </div>
+  <div class="guidance">Record an observation if "follow target mode" is not available.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_3_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_3_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_3_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_3_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_3_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">15.4 -- Competence</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.4.1</span>
+    <span class="q-text">Are the vessels crew suitably qualified for DP Operations?</span>
+  </div>
+  <div class="guidance">All key DP personnel (including Engineer and/or Electro-technical personnel) onboard should comply with the IMCA minimum requirements for experience and training. Confirm DP certification been issued by a recognised body, such as the Nautical Institute. Experience should be recorded in DP log books.<div class="ref">IMCA M 117</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_4_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_4_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_4_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_4_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_4_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.4.2</span>
+    <span class="q-text">Is there an Engineer and or Electronic Technician on-board with approved training on the DP system?</span>
+  </div>
+  <div class="guidance">Confirm that Engineers and ETOs have appropriate training/guidance on how to operate/maintain plant when in DP mode. Sight certificates / records of DP system training from system manufacturer.<div class="ref">IMCA M117 section 6</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_4_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_4_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_4_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_4_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_4_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">15.4.3</span>
+    <span class="q-text">Are DP drills included in the vessel drill matrix and performed regularly?</span>
+  </div>
+  <div class="guidance">Inspector to check drill record and record date of last DP drill.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q15_4_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q15_4_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q15_4_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q15_4_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q15_4_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="general-obs">
+  <h3>&#9888; General Observations / Additional Comments</h3>
+  <textarea name="general_obs" placeholder="Overall inspection notes, summary of findings, follow-up actions required..." rows="5"></textarea>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<script>
+
+function saveProgress() {
+  var html = document.documentElement.outerHTML;
+  // Injecter les valeurs des radios
+  var radios = document.querySelectorAll('input[type=radio]');
+  for (var i = 0; i < radios.length; i++) {
+    var r = radios[i];
+    if (r.checked) {
+      html = html.replace(
+        'name="' + r.name + '" value="' + r.value + '"',
+        'name="' + r.name + '" value="' + r.value + '" checked'
+      );
+    }
+  }
+  // Injecter les checkboxes
+  var checks = document.querySelectorAll('input[type=checkbox]');
+  for (var j = 0; j < checks.length; j++) {
+    var cb = checks[j];
+    if (cb.checked) {
+      html = html.replace(
+        'name="' + cb.name + '" value="1"',
+        'name="' + cb.name + '" value="1" checked'
+      );
+    }
+  }
+  // Injecter les valeurs des inputs texte et select
+  var inputs = document.querySelectorAll('input[type=text], input[type=date], select');
+  for (var k = 0; k < inputs.length; k++) {
+    var inp = inputs[k];
+    var val = inp.value.replace(/"/g, '&quot;');
+    if (val) {
+      // Remplacer placeholder ou valeur vide par value=
+      var tag = inp.outerHTML;
+      var newTag = tag.replace('>', ' value="' + val + '">');
+      if (inp.tagName === 'SELECT') {
+        // Pour select, marquer l'option selected
+        newTag = tag.replace('value="' + val + '"', 'value="' + val + '" selected');
+      }
+      html = html.replace(tag, newTag);
+    }
+  }
+  // Injecter les textareas
+  var tas = document.querySelectorAll('textarea');
+  for (var t = 0; t < tas.length; t++) {
+    var ta = tas[t];
+    if (ta.value) {
+      var oldTag = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '"></textarea>';
+      var newTagTA = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '">' + ta.value.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>';
+      html = html.replace(oldTag, newTagTA);
+    }
+  }
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'inspection_save.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>

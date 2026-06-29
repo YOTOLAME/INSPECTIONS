@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspectare -- PSV (Platform Supply Vessel)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, Arial, sans-serif; font-size: 14px; background: #f0f2f5; color: #1a2a3a; }
+.header { background: #003B6E; color: white; padding: 12px 16px; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.btn-row { display: flex; gap: 8px; padding: 12px; }
+.btn { flex: 1; padding: 11px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-save { background: #27ae60; color: white; }
+.btn-pdf { background: #e67e22; color: white; }
+.meta-card { background: white; margin: 0 12px 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.meta-card h2 { font-size: 11px; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 0.5px; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.meta-field label { display: block; font-size: 10px; text-transform: uppercase; color: #888; margin-bottom: 3px; font-weight: 600; }
+.meta-field input, .meta-field select { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px 9px; font-size: 13px; }
+.meta-field.full { grid-column: 1 / -1; }
+.section { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden; }
+.section-title { background: #003B6E; color: white; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+.question { border-bottom: 1px solid #eef1f5; padding: 14px; }
+.question:last-child { border-bottom: none; }
+.q-header { display: flex; gap: 10px; margin-bottom: 8px; }
+.q-num { background: #003B6E; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; white-space: nowrap; align-self: flex-start; margin-top: 1px; }
+.q-text { font-size: 13px; line-height: 1.5; font-weight: 600; }
+.guidance { font-size: 11px; color: #555; background: #f0f5ff; border-left: 3px solid #003B6E; padding: 7px 10px; border-radius: 0 4px 4px 0; margin-bottom: 8px; line-height: 1.4; }
+.ref { font-size: 10px; color: #003B6E; font-weight: 700; margin-top: 4px; }
+.answer-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ans { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.yes-lbl { border-color: #27ae60; color: #27ae60; }
+.no-lbl { border-color: #e74c3c; color: #e74c3c; }
+.na-lbl { border-color: #7f8c8d; color: #7f8c8d; }
+.obs-row { margin-bottom: 6px; font-size: 12px; }
+textarea { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px; font-size: 12px; resize: vertical; }
+.general-obs { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 14px; }
+.general-obs h3 { font-size: 12px; text-transform: uppercase; color: #c0392b; font-weight: 700; margin-bottom: 8px; }
+.general-obs textarea { min-height: 80px; }
+.warning { margin: 0 12px 12px; background: #fff3cd; border-left: 4px solid #f0ad4e; padding: 10px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #856404; }
+@media print {
+  .btn-row, .warning { display: none; }
+  .header { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section-title { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; }
+  .meta-card, .section, .general-obs { box-shadow: none; border: 1px solid #ddd; margin: 0 0 8px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>&#128674; Inspectare -- PSV (Platform Supply Vessel)</h1>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<div class="warning">&#9888; Do not close this file without saving. All answers will be lost.</div>
+<div class="meta-card">
+  <h2>Inspection Details</h2>
+  <div class="meta-grid">
+    <div class="meta-field"><label>Vessel Name</label><input type="text" name="vessel" placeholder="e.g. Bourbon Evolution 805"></div>
+    <div class="meta-field"><label>Inspection Date</label><input type="date" name="insp_date"></div>
+    <div class="meta-field"><label>Inspector</label><input type="text" name="inspector" placeholder="Name"></div>
+    <div class="meta-field"><label>Operator</label><input type="text" name="operator" placeholder="Company"></div>
+    <div class="meta-field"><label>Flag State</label><input type="text" name="flag" placeholder="Flag"></div>
+    <div class="meta-field"><label>IMO Number</label><input type="text" name="imo" placeholder="IMO #"></div>
+    <div class="meta-field"><label>Port / Location</label><input type="text" name="port" placeholder="Location"></div>
+    <div class="meta-field"><label>Block / Field</label><input type="text" name="block" placeholder="e.g. Block 17"></div>
+    <div class="meta-field full"><label>Inspection Status</label>
+      <select name="status"><option>In Progress</option><option>Completed</option><option>Suspended</option></select>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">1 -- ROB at Mobilization</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">1.1</span>
+    <span class="q-text">If inspection takes place during vessel mobilization, inspector shall issue an ROB survey statement covering, when relevant, all bunker, dry and liquid bulk tanks. Note that ballast, lubes, bilge and sludge tanks shall not be surveyed.</span>
+  </div>
+  <div class="guidance">Complete ROB survey as required. Record quantities for all applicable tanks.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q1_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q1_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q1_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q1_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q1_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">2 -- Dry Bulk</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.1</span>
+    <span class="q-text">Is the general condition, visual appearance and cleanliness of the dry bulk tanks satisfactory?</span>
+  </div>
+  <div class="guidance">Inspector shall not enter any enclosed or confined spaces and shall check cleanliness condition of all dry bulk tanks from outside. As practicable, check that aeration screens are in good condition and bolted tight to the tank. Tanks shall be free of sediments.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.2</span>
+    <span class="q-text">Are the tank fittings in dry bulk tanks in good working condition?</span>
+  </div>
+  <div class="guidance">All dry bulk tanks shall be fitted with distant reading limit detection switches covering at least following filling levels: Min - 1/3 - 2/3 - Max. Inspector shall require high-level alarms to be tested.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.3</span>
+    <span class="q-text">Are the dry bulk systems operational?</span>
+  </div>
+  <div class="guidance">Inspector shall check the log for recent dry bulk cargo operations and whether any delays were experienced due to the vessels bulk system. Inspector shall require crew to demonstrate their awareness of dry bulk system operation and maintenance. Inspector shall require the test of the emergency stops of dry bulk compressors. Inspector shall require nominal pressure to be established in the dry bulk system and check for leaks. Vent lines shall also be tested to confirm they are free of obstructions. Air drying system shall be in good order and maintained. Dry bulk filter shall be easily accessible with by-pass kept closed. Segregation shall be achieved by double valves, blanks or fully separate lines. Service air connection, to push and unplug dry bulk line, shall be available and readily accessible. Entire dry bulk system shall be fitted with remote control and monitoring equipment controlled from a remote control panel. Dry bulk system shall be provided with sufficient spares (e.g. compressor, valves).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">3 -- Liquid Bulk</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.1</span>
+    <span class="q-text">Is the general condition, visual appearance and cleanliness of the liquid bulk tanks satisfactory?</span>
+  </div>
+  <div class="guidance">Inspector shall not enter any enclosed or confined spaces and shall check cleanliness condition of all liquid bulk tanks from the deck. Coating shall be free of breakdown and deterioration. Tanks shall be free of sediments build-up. Inspector shall report date and extent of last cleaning operation of liquid bulk tanks.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.2</span>
+    <span class="q-text">Are the tank fittings in liquid bulk tanks in good working condition?</span>
+  </div>
+  <div class="guidance">Mud tanks shall be able to carry up to 2.5 specific gravity products and shall be provided with agitators. Inspector shall require the start of 50% of agitators and confirm that this can be sustained by vessel generators. Inspector shall report date of last maintenance done on agitators. Inspector shall check that bus bars are free of earth fault when breakers of agitators are closed. All liquid bulk tanks shall be provided with distant reading gauges. Sounding pipes shall be in good condition (e.g. greased, unplugged). Inspector shall require high-level alarms to be tested. Tanks lids shall be free of deformation and welded marked on top of the cover.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.3</span>
+    <span class="q-text">Are the liquid bulk cargo pumping systems operational?</span>
+  </div>
+  <div class="guidance">Inspector shall check the log for recent bulk cargo operations and whether any delays were experienced due to the vessels bulk system. Inspector shall require crew to demonstrate their awareness of liquid bulk system operation and maintenance. Inspector shall require the test of the emergency stops for bulk transfer pumps. Liquid bulk filter shall be easily accessible with by-pass kept closed. Segregation shall be achieved by double valves or blanks. Entire liquid bulk system shall be fitted with remote control and monitoring equipment controlled from a remote control panel. Liquid bulk system shall be provided with sufficient spares (e.g. pumps, valves, gaskets). Vessel shall be provided with technical operator guidelines giving indication on maximum brine temperature allowed on board.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">4 -- Bulk Transfer</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.1</span>
+    <span class="q-text">Are the bulk stations in good condition?</span>
+  </div>
+  <div class="guidance">Bulk station shall be free of excessive corrosion. Valves shall be greased so they can move easily. Gaskets shall be in position and in good condition. Unused manifolds or drains shall be capped or blanked. Water pollutant products connections shall be of self-sealing type (e.g. TODO). Other products connections can be hammer lug type (e.g WECO). Fuel connection shall be provided with anti-spill tray together with draining system and sampling valve. Fuel metering station shall be sealed and calibrated. Inspector shall report last date of meter calibration and authority issuing the certificate. Inspector shall fill in the table reporting bulk stations details.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.2</span>
+    <span class="q-text">Is there evidence that bulk hoses are handled and managed as per Company requirements?</span>
+  </div>
+  <div class="guidance">All potential hose snagging points shall be identified and suitable precautions put in place. If vessel's hoses will be used during the contract: Transfer hoses shall be leak tested filled with water at 5 bars for 5 minutes annually by 3rd party; Certificates shall be available; Hose hanging off pins shall be fitted. If vessel's hoses will not be used during contract, transfer hoses shall be tagged out and quarantined.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.3</span>
+    <span class="q-text">Is there evidence of a pre-transfer conference being held between the vessel and the receiving or discharging facility before the transfer of bulk begins?</span>
+  </div>
+  <div class="guidance">Personnel involved in the bunkering or water pollutant products transfer operation onboard shall have no other tasks during transfer. Planning of bunker transfer operations should include: determining space available for bunkers; maximum filling volume; controls for valve settings; loading rates; bunker tank ventilation arrangements; internal tank overflow arrangements; verification of gauging system; alarm settings on overfill alarm units; communication procedures including emergency stop; changing over tanks during loading; containment arrangements; manning requirements; visual monitoring; hose checks prior to transfer commencement.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.4</span>
+    <span class="q-text">Is the vessel authorized by Class and Flag to carry methanol in bulk?</span>
+  </div>
+  <div class="guidance">Methanol transportation in bulk is a specialized operation which requires specific equipment, procedures and experience that might not be easily available on a PSV. This shall be carefully considered and supported by an in-depth suitability inspection based at least on OCIMF/MSF guidelines. Carrying other chemical products in bulk might require additional measures.<div class="ref">Reference OCIMF Information Paper - The Carriage of Methanol in Bulk Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.5</span>
+    <span class="q-text">Is the methanol handling system and crew familiarization proven by wet trials?</span>
+  </div>
+  <div class="guidance">Wet trials should be attended by a specialized consultant to confirm system readiness and crew awareness.<div class="ref">Reference OCIMF Information Paper - The Carriage of Methanol in Bulk Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">5 -- Deck Cargo</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.1</span>
+    <span class="q-text">Have the risks associated with deck cargo operations been analyzed?</span>
+  </div>
+  <div class="guidance">The risk analysis shall include both the hazards to personnel (e.g. line of fire) and equipment (e.g. material damage).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.2</span>
+    <span class="q-text">Has a MOPO (Matrix of Permitted Operations) been developed and implemented for deck cargo operations?</span>
+  </div>
+  <div class="guidance">The MOPO should define stop points to stop work when an unacceptable change of conditions and risk occurs.<div class="ref">Reference OCIMF Information Paper - Deck Cargo Management Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.3</span>
+    <span class="q-text">Have escape routes for deck personnel been defined and kept free of obstruction?</span>
+  </div>
+  <div class="guidance">Escape routes and a nominated safe area of refuge shall have been identified through the risk assessment.<div class="ref">Reference OCIMF Information Paper - Deck Cargo Management Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.4</span>
+    <span class="q-text">Is the deck area monitored by video cameras?</span>
+  </div>
+  <div class="guidance">Recording video camera performance standards should meet the location and environment constraints. System shall include "vessel to shore" video streaming, giving shore-based personnel access to both live and recorded video. Video recording shall be maintained during 10 days.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.5</span>
+    <span class="q-text">Is a deck cargo stowage plan developed before starting deck cargo operations, using the information in the draft deck cargo manifest?</span>
+  </div>
+  <div class="guidance">The deck cargo stowage plan is a visual representation of the cargo stowed on deck. It is a live vessel-specific document. The deck cargo stowage plan should include: Scaled representation of cargo on deck; Deck surfaces and loading capacities; Emergency escape routes and safe access; Vessel strong points, lashing points, deck equipment and securing machinery; Colour identification of deck cargo if required; Clear identification and segregation areas for dangerous goods; Location of and clear access to power outlets for refrigerated CCU. The deck cargo manifest should clearly identify the cargo to be shipped, details of the contents, the destination, general dimensions, identification numbers, any dangerous goods and the verified mass.<div class="ref">Reference OCIMF Information Paper - Deck Cargo Management Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.6</span>
+    <span class="q-text">Do the deck personnel maintain dedicated radio communication with the crane operator/lifting supervisor at all times?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.7</span>
+    <span class="q-text">Do the bridge team always have a line of sight to the vessel crew during deck cargo operations?</span>
+  </div>
+  <div class="guidance">While in the 500m zone, the watch officer on the bridge who is not attending the Dynamic Positioning station shall be dedicated to the monitoring of on-going vessel's mission activities (i.e. cargo operations) and surrounding environment (i.e. coordination with the offshore installation, VHF/UHF communications, marine traffic, vessel's motions, water ingress management on open stern deck vessel).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.8</span>
+    <span class="q-text">Has the lifting plan issued for the deck cargo transfer been discussed between the vessel and the installation or logistics base as applicable?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.9</span>
+    <span class="q-text">Are cargo securing procedures implemented?</span>
+  </div>
+  <div class="guidance">Criteria for securing cargo shall be defined. When secured, only one block of cargo should be worked at a time, and all other blocks of cargo should remain secured during deck cargo operations. Each block of cargo should be re-secured before starting the next block. The vessel Master or their delegate should enforce block segregation and securing deck cargo to reduce the risk of shifting and to best ensure the vessel crew's safety on deck.<div class="ref">Reference OCIMF Information Paper - Deck Cargo Management Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.10</span>
+    <span class="q-text">Have the risks associated to the handling of tubulars and pipe cargo been analyzed?</span>
+  </div>
+  <div class="guidance">The risk analysis shall include both the hazards to personnel (e.g. line of fire) and equipment (e.g. material damage).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.11</span>
+    <span class="q-text">Does the crew systematically prepare the deck with rope dunnage before loading tubulars?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.12</span>
+    <span class="q-text">Does the crew systematically use pipe posts or stanchions to protect personnel involved in tubulars handling?</span>
+  </div>
+  <div class="guidance">It shall be clear that under no circumstances will the crew enter the unprotected area where they are exposed to falling or shifting tubulars. Under no circumstances will the crew climb on tubulars.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.13</span>
+    <span class="q-text">Is the main deck clear, available for cargo and in good condition?</span>
+  </div>
+  <div class="guidance">Deck sheating and wooden cargo protection shall be free of damage. Deck area shall be marked to identify areas where cargo must not be loaded. When loading deck cargoes, care should be taken to avoid any obstruction to safety zones, freeing ports/drainage arrangements, doors and hatches or aft mooring station. The deck strength shall be compatible with the heaviest project's cargo weight (e.g. well head).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.14</span>
+    <span class="q-text">On "open stern" vessels, are responsible officers aware of specific risks of deck cargo operations offshore and associated limitations/mitigations?</span>
+  </div>
+  <div class="guidance">Limitations and mitigations include: triggers that would cause cargo operations to be stopped including water being shipped on deck, vessel motion, vessel orientation, current and expected sea state; eliminating unsecured cargo during the cargo securing process; arrangement of cargo placement and tank contents so as to minimize stern trim to maintain sufficient freeboard at the stern; cargo placement to provide unobstructed escape routes for crew working on deck.<div class="ref">Reference OCIMF Information Paper - Deck Cargo Management Onboard Offshore Vessels</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.15</span>
+    <span class="q-text">Is the deck cargo securing/lashing equipment in a good order?</span>
+  </div>
+  <div class="guidance">Lashing fixed points shall be marked with their SWL. Records of less than 12 months inspection of securing/lashing equipment shall be available. Cargo securing and lashing equipment shall be suitable for the cargo loaded and available in sufficient quantity.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.16</span>
+    <span class="q-text">Are the tugger winches and wires associated with positioning cargo in good order?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with 2 x 10 MT capacity tugger winches. Protection for operators shall be in place. Wire shall not have hand splice. It should be twice the deck long to have sufficient slack to fasten cargo.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_16" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_16" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_16" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_16" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_16" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.17</span>
+    <span class="q-text">Are the reefer containers power socket in sufficient number and in good condition?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with at least 5 x power sockets for reefer container connection. Cabling and sockets shall be in good visual condition. Inspector shall request crew to demonstrate that electrical power is available at socket. Inspector shall check that bus bars are free of earth fault when breakers of reefers sockets are closed. Inspector shall confirm the number of reefer containers which can be powered simultaneously on deck.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_17" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_17" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_17" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_17" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_17" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.18</span>
+    <span class="q-text">Are officers aware of the dangers of entrapped water on deck particularly when carrying pipe cargoes?</span>
+  </div>
+  <div class="guidance">The disposition of the freeing ports should be carefully considered to ensure the most effective drainage of water trapped in pipe deck cargoes.<div class="ref">Reference International Code on Intact Stability - Part B section 2.4</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_18" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_18" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_18" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_18" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_18" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.19</span>
+    <span class="q-text">Does the vessel implement a "clear deck" or "hands free" lifting procedure?</span>
+  </div>
+  <div class="guidance">Safe areas beyond the crash barriers shall be clear of obstructions and easily accessible to the crew from the working deck. Vessel crew should not be on working deck when cargo is handled other than to hook and unhook cargo.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_19" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_19" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_19" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_19" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_19" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.20</span>
+    <span class="q-text">Are portable radios in sufficient number for cargo / bulk operations both in port and offshore?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_20" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_20" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_20" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_20" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_20" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">6 -- Carriage of Dangerous Goods</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.1</span>
+    <span class="q-text">Does the vessel have a valid IMDG certification?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.2</span>
+    <span class="q-text">Is the vessel provided with IMDG Code?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.3</span>
+    <span class="q-text">Does the vessel produce a cargo plan identifying all classes of cargo, including dangerous goods?</span>
+  </div>
+  <div class="guidance">The cargo plan can be produced from a shore base but there should be some evidence that the vessel crew/captain have reviewed this, know where the dangerous cargoes are located and found it acceptable. Deck shall be marked to show where dangerous cargo can be stowed. "No Smoking" signs shall be posted to avoid source of ignition when dangerous goods are handled on board.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.4</span>
+    <span class="q-text">Is the vessel provided with the additional safety equipment required for the carriage of dangerous goods in packaged form?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with: Four sets of full protective clothing, resistant to chemical attack (SOLAS Reg II-2.19 3.6.1); At least two self-contained breathing apparatus additional to those required for firefighting, each with two spare charges (SOLAS Reg II-2.19 3.6.2); A 40 litre / 200 bar medical oxygen cylinder stored in fixed support connected directly to vessel steel structure in hospital, assembled for direct use (MFAG - IMDG); A complete portable set, ready for use, with a 2 litre / 200 bar medical oxygen cylinder and a spare cylinder (MFAG - IMDG).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">7 -- Stand-By Duties General</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.1</span>
+    <span class="q-text">Does the vessel have procedures for standby duties and is the crew aware of them?</span>
+  </div>
+  <div class="guidance">This includes scenario such as: Emergency notification checklist; Fire, explosion, gas leak, structural failure on installation or mass evacuation and abandonment from installation; Helicopter ditching; Marine incident, errant vessel; Man overboard; On scene coordinator.<div class="ref">UKOOA ERRV Management Guidelines - Appendix Sample emergency scenario checklists</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.2</span>
+    <span class="q-text">Does the vessel have a clearly marked rescue zone, clear of propellers and obstructions?</span>
+  </div>
+  <div class="guidance">Rescue zone shall be minimum 5 meters on each side. Rescue zones shall be located clear of the effects of the propellers/thrusters as well as any fendering system which might impede survivor recovery from the sea or liferaft.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.3</span>
+    <span class="q-text">Is the vessel provided with scramble nets on both sides?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with two (2) Jason Cradle's scramble nets (1 on each rescue zone). Those scramble nets shall be SOLAS approved, made of high tensile plastic, of length consistent with vessel's freeboard and width 1780 mm as a minimum.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.4</span>
+    <span class="q-text">Is the vessel equipped to perform anti-collision watch duty?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with: Two radars (ARPA capable); One AIS interfaced with radar; One searchlight controlled from the bridge.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.5</span>
+    <span class="q-text">Is the vessel equipped with communication equipment meeting Company requirements?</span>
+  </div>
+  <div class="guidance">Vessel shall be equipped with: A3 GMDSS station; Email; Country based project mobile phone; V-SAT service with minimum bandwidth of 512 kbps.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.6</span>
+    <span class="q-text">Is the vessel provided with required oil spill response equipment?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with 6 meters oil dispersant booms on each vessel's side. Vessel shall be provided with adjustable flow rate eductor together with hoses to be connected on fire main for dispersant spraying through required dispersant booms. Inspector shall require working test of booms and adjustable eductor.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.7</span>
+    <span class="q-text">Is the hospital readily available and in a hygienically satisfactory condition?</span>
+  </div>
+  <div class="guidance">Hospital shall be provided with minimum one bed.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.8</span>
+    <span class="q-text">Are MEDEVAC drills regularly conducted to ensure that roles and responsibilities between Company and Contractor are clearly known and understood by all?</span>
+  </div>
+  <div class="guidance">MEDEVAC procedure should be tested in different circumstances (i.e. vessel in port, vessel in transit, vessel in offshore site) as stakeholders and responsibilities may vary depending on location.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.9</span>
+    <span class="q-text">Does the vessel have their own readily and permanent access to shore-based medical advice services and is it regularly tested?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.10</span>
+    <span class="q-text">Does the vessel's medicine chest include an automated defibrillator and a portable medical oxygen set?</span>
+  </div>
+  <div class="guidance">Such equipment shall be readily available to assist injured personnel in emergency situations. The automated external defibrillator and portable medical oxygen set shall be certified for use in European Union or USA and maintained as per manufacturer recommendations.<div class="ref">2007 - World Health Organization - International Medical Guide for Ships</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.11</span>
+    <span class="q-text">Are the passenger's accommodation readily available and in a hygienically satisfactory condition?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with 12 passengers accommodation for Company use.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">8 -- Stand-By Duties Fire Fighting</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.1</span>
+    <span class="q-text">Does the vessel hold FiFi 1 class notation?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.2</span>
+    <span class="q-text">Does the FiFi 1 equipment meet the following requirement?</span>
+  </div>
+  <div class="guidance">FiFi 1 equipment shall be provided with: 2 x fire monitors having horizontal angular movement of at least 90&#176; and vertical angular movement of around 45&#176;; provided with fixed arrangement making dispersion of the water jet into water fog; having activation and manoeuvring controllable from a remote control station; active fire protection against external heat radiation by permanently installed water-spraying system applying water by means of sprinkler nozzles.<div class="ref">Reference DNV FiFi 1 class rules</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.3</span>
+    <span class="q-text">Is the crew familiar with the operation of FiFi 1 equipment?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.4</span>
+    <span class="q-text">Does the vessel's stability booklet include calculation proving satisfactory stability when all monitors are in operation at full capacity in the most adverse direction for the stability?</span>
+  </div>
+  <div class="guidance"><div class="ref">Reference DNV FiFi 1 class rules</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.5</span>
+    <span class="q-text">Is the FiFi 1 equipment in good order?</span>
+  </div>
+  <div class="guidance">If vessel is offshore, inspector shall require FiFi 1 fire main capacities to be tested continuously with both monitors in operation and the active heat protection system in operation for not less than one (1) hour to ensure that fire fighter pump's and prim-movers bearings/packings temperature is stabilised. Inspector shall report duration needed to have FiFi 1 equipment established at nominal rate and pressure and comments on test performance. During the function test, inspector shall check that: Monitors remote control station is in good order (movement, water jet/fog); Pump(s) and associated piping are free of leaks and abnormal vibration; Pump(s) and associated prime movers are free of excessive heat; Active fire protection sprinkler are all giving water and free of damage; Active fire protection covers all superstructures; Visibility from the wheelhouse and the control station can be maintained during water spraying.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">9 -- Stand-By Duties Fast Rescue Boat</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.1</span>
+    <span class="q-text">Is the Fast Rescue Boat and associated launching and embarkation appliances (including release mechanism) compliant with LSA Code?</span>
+  </div>
+  <div class="guidance">Compliance shall be demonstrated by equipment's type approval certificates issued by a classification society member of IACS.<div class="ref">Reference GS GR HSE 317 &#167;10.2.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.2</span>
+    <span class="q-text">Is the Fast Rescue Boat hull length of not less than 6 meters and not more than 8.5 meters?</span>
+  </div>
+  <div class="guidance"><div class="ref">Reference LSA Code &#167;5.1.4.3</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.3</span>
+    <span class="q-text">Is the following equipment available on board the Fast Rescue Boat?</span>
+  </div>
+  <div class="guidance">Required equipment: Sufficient buoyant paddles; A buoyant bailer; A binnacle containing an efficient compass which is luminous or provided with suitable means of illumination; A sea anchor; One buoyant line, not less than 50 meters in length; One waterproof electric torch suitable for Morse signaling, together with one spare set of batteries and one spare bulb; One whistle or equivalent sound signal; A first-aid kit outfit in a waterproof case; Two buoyant rescue quoits, attached to not less than 30 meters of buoyant line; A searchlight which can work continuously for not less than 3 hours; An efficient radar reflector; Two thermal protective aids; One portable fire-extinguishing equipment suitable for extinguishing oil fires; A boat-hook; A bucket; A knife or hatchet.<div class="ref">Reference LSA Code &#167;5.1.2.2 & &#167;5.1.2.3</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.4</span>
+    <span class="q-text">Is the above equipment properly secured by lashings, storage in lockers or compartments?</span>
+  </div>
+  <div class="guidance">The equipment shall be secured in such a manner as not to interfere with any launching or recovery procedures. Weathertight stowage for small items of equipment shall be fitted.<div class="ref">Reference LSA Code &#167;5.1.2.2 & &#167;5.1.2.3</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.5</span>
+    <span class="q-text">Is the Fast Rescue Boat fitted with arrangements for towing and sufficiently strong to marshal or tow liferafts?</span>
+  </div>
+  <div class="guidance"><div class="ref">Reference LSA Code &#167;5.1.1.9</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.6</span>
+    <span class="q-text">Does the Fast Rescue Boat meet the following LSA Code requirements?</span>
+  </div>
+  <div class="guidance">Shall be self-righting or capable of being readily righted by not more two of their crew (LSA Code &#167;5.1.4.5). Shall be self-bailing or be capable of being rapidly cleared of water (LSA Code &#167;5.1.4.6). Shall be steered by a wheel at the helmsman's position remote from the tiller. An emergency steering system providing direct control of the rudder or water jet shall also be provided (LSA Code &#167;5.1.4.7). Engines shall stop automatically or be stopped by the helmsman's emergency release switch, should the rescue boat capsize (LSA Code &#167;5.1.4.8). Shall include a hands free and watertight VHF radio communication set (LSA Code &#167;5.1.4.11).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.7</span>
+    <span class="q-text">Does the Fast Rescue Boat meet the following Company requirements?</span>
+  </div>
+  <div class="guidance">Shall be of rigid type; Shall be mounted on davit and fixed to a single point suspension arrangement; Shall be equipped with diesel engine.<div class="ref">Reference GS GR HSE 317 &#167;10.2.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.8</span>
+    <span class="q-text">Is the Fast Rescue Boat equipped with a man overboard recovery kit?</span>
+  </div>
+  <div class="guidance">Kit shall be SOLAS type approved (e.g. Jason cradle).<div class="ref">Reference GS GR HSE 317 &#167;10.2.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.9</span>
+    <span class="q-text">Does the Fast Rescue Boat launching appliance meet the following LSA Code requirements?</span>
+  </div>
+  <div class="guidance">The launching appliance shall be fitted with a device to dampen the forces due to interaction with the waves when the Fast Rescue Boat is launched or recovered. The device shall include a flexible element to soften shock forces and a damping element to minimize oscillations (LSA Code &#167;6.1.7.2). The winch shall be fitted with an automatic high-speed tensioning device which prevents the wire from going slack (LSA Code &#167;6.1.7.3). The winch brake shall have a gradual action (LSA Code &#167;6.1.7.4). The lowering speed for a Fast Rescue Boat with its full complement of persons and equipment shall not exceed 1 m/s. A Fast Rescue Boat launching appliance shall be capable of hoisting the Fast Rescue Boat with 6 persons at a speed of not less than 0.8 m/s (LSA Code &#167;6.1.7.5).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">10 -- Stand-By Duties Fast Rescue Boat Launching and Recovery</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.1</span>
+    <span class="q-text">Has the launching and recovery of the fast rescue boat been witnessed?</span>
+  </div>
+  <div class="guidance">Inspector shall witness Fast Rescue Boat drill and record time needed from alert to launching completion. Rescue boats shall be stowed in a state of continuous readiness for launching in not more than 5 min (Reference SOLAS III/Reg 14). Recovery time of the rescue boat shall be not more than 5 min in moderate sea conditions when loaded with its full complement of persons and equipment (Reference SOLAS III/Reg 17).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.2</span>
+    <span class="q-text">Is each person assigned to crew the Fast Rescue Boat provided with an immersion suit or life jacket depending on intended area of operation?</span>
+  </div>
+  <div class="guidance">Life jacket should not reduce freedom of movement. SOLAS approved inflatable 275N life jacket is recommended.<div class="ref">Reference GS GR HSE 317 &#167;10.2.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.3</span>
+    <span class="q-text">Are weather limitations for the launching and recovery of Fast Rescue Boat clearly defined in vessel's procedures?</span>
+  </div>
+  <div class="guidance">Inspector shall record weather limitations. The Fast Rescue Boat launching appliance should be demonstrated in a sea state associated with a force 6 wind on the Beaufort scale, in association with a significant wave height of at least 3 meters.<div class="ref">Reference LSA Code &#167;8.1.8</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.4</span>
+    <span class="q-text">Does the crew assigned to Fast Rescue Boat meet the Company specific certification requirements?</span>
+  </div>
+  <div class="guidance">Training and certification of Fast Rescue Boat crew shall be performed as per STCW approved model course by a shore training centre STCW accredited ("Proficiency in Fast Rescue Boat" certificate).<div class="ref">Reference GS GR HSE 317 &#167;10.2.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">11 -- Engine Room Section</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">11.1</span>
+    <span class="q-text">Are main, auxiliary and emergency plant in good order?</span>
+  </div>
+  <div class="guidance">As applicable inspector shall witness: blackout recovery test with recovery from the stand-by generator; blackout recovery test with recovery from the emergency generator; running test of all main engines (sea trials during 15 minutes at 100% load); running test of all auxiliary engines; generators running test (including connection on bus bar); emergency air compressor running test; emergency generator running test. Each emergency generating set arranged to be automatically started shall be equipped with starting devices approved by the Administration with a stored energy capability of at least three consecutive starts. A second source of energy shall be provided for an additional three starts within 30 minutes unless manual starting can be demonstrated to be effective.<div class="ref">Reference SOLAS II-1/44.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q11_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q11_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q11_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q11_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q11_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">11.2</span>
+    <span class="q-text">Is the steering gear/steering compartment(s) free from defects?</span>
+  </div>
+  <div class="guidance">Inspector shall witness an emergency steering test. Emergency steering changover procedures shall be clearly displayed. As applicable, this might be demonstrated by the local control of azimuth thrusters.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q11_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q11_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q11_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q11_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q11_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="general-obs">
+  <h3>&#9888; General Observations / Additional Comments</h3>
+  <textarea name="general_obs" placeholder="Overall inspection notes, summary of findings, follow-up actions required..." rows="5"></textarea>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<script>
+
+function saveProgress() {
+  var html = document.documentElement.outerHTML;
+  // Injecter les valeurs des radios
+  var radios = document.querySelectorAll('input[type=radio]');
+  for (var i = 0; i < radios.length; i++) {
+    var r = radios[i];
+    if (r.checked) {
+      html = html.replace(
+        'name="' + r.name + '" value="' + r.value + '"',
+        'name="' + r.name + '" value="' + r.value + '" checked'
+      );
+    }
+  }
+  // Injecter les checkboxes
+  var checks = document.querySelectorAll('input[type=checkbox]');
+  for (var j = 0; j < checks.length; j++) {
+    var cb = checks[j];
+    if (cb.checked) {
+      html = html.replace(
+        'name="' + cb.name + '" value="1"',
+        'name="' + cb.name + '" value="1" checked'
+      );
+    }
+  }
+  // Injecter les valeurs des inputs texte et select
+  var inputs = document.querySelectorAll('input[type=text], input[type=date], select');
+  for (var k = 0; k < inputs.length; k++) {
+    var inp = inputs[k];
+    var val = inp.value.replace(/"/g, '&quot;');
+    if (val) {
+      // Remplacer placeholder ou valeur vide par value=
+      var tag = inp.outerHTML;
+      var newTag = tag.replace('>', ' value="' + val + '">');
+      if (inp.tagName === 'SELECT') {
+        // Pour select, marquer l'option selected
+        newTag = tag.replace('value="' + val + '"', 'value="' + val + '" selected');
+      }
+      html = html.replace(tag, newTag);
+    }
+  }
+  // Injecter les textareas
+  var tas = document.querySelectorAll('textarea');
+  for (var t = 0; t < tas.length; t++) {
+    var ta = tas[t];
+    if (ta.value) {
+      var oldTag = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '"></textarea>';
+      var newTagTA = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '">' + ta.value.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>';
+      html = html.replace(oldTag, newTagTA);
+    }
+  }
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'inspection_save.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>

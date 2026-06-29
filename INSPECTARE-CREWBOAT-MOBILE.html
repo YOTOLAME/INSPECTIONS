@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspectare -- Crew Boat</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, Arial, sans-serif; font-size: 14px; background: #f0f2f5; color: #1a2a3a; }
+.header { background: #003B6E; color: white; padding: 12px 16px; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.btn-row { display: flex; gap: 8px; padding: 12px; }
+.btn { flex: 1; padding: 11px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-save { background: #27ae60; color: white; }
+.btn-pdf { background: #e67e22; color: white; }
+.meta-card { background: white; margin: 0 12px 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.meta-card h2 { font-size: 11px; text-transform: uppercase; color: #666; margin-bottom: 10px; letter-spacing: 0.5px; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.meta-field label { display: block; font-size: 10px; text-transform: uppercase; color: #888; margin-bottom: 3px; font-weight: 600; }
+.meta-field input, .meta-field select { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px 9px; font-size: 13px; }
+.meta-field.full { grid-column: 1 / -1; }
+.section { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden; }
+.section-title { background: #003B6E; color: white; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+.question { border-bottom: 1px solid #eef1f5; padding: 14px; }
+.question:last-child { border-bottom: none; }
+.q-header { display: flex; gap: 10px; margin-bottom: 8px; }
+.q-num { background: #003B6E; color: white; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; white-space: nowrap; align-self: flex-start; margin-top: 1px; }
+.q-text { font-size: 13px; line-height: 1.5; font-weight: 600; }
+.guidance { font-size: 11px; color: #555; background: #f0f5ff; border-left: 3px solid #003B6E; padding: 7px 10px; border-radius: 0 4px 4px 0; margin-bottom: 8px; line-height: 1.4; }
+.ref { font-size: 10px; color: #003B6E; font-weight: 700; margin-top: 4px; }
+.answer-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ans { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.yes-lbl { border-color: #27ae60; color: #27ae60; }
+.no-lbl { border-color: #e74c3c; color: #e74c3c; }
+.na-lbl { border-color: #7f8c8d; color: #7f8c8d; }
+.obs-row { margin-bottom: 6px; font-size: 12px; }
+textarea { width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 7px; font-size: 12px; resize: vertical; }
+.general-obs { margin: 0 12px 12px; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); padding: 14px; }
+.general-obs h3 { font-size: 12px; text-transform: uppercase; color: #c0392b; font-weight: 700; margin-bottom: 8px; }
+.general-obs textarea { min-height: 80px; }
+.warning { margin: 0 12px 12px; background: #fff3cd; border-left: 4px solid #f0ad4e; padding: 10px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #856404; }
+@media print {
+  .btn-row, .warning { display: none; }
+  .header { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section-title { background: #003B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; }
+  .meta-card, .section, .general-obs { box-shadow: none; border: 1px solid #ddd; margin: 0 0 8px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>&#128692; Inspectare -- Crew Boat</h1>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<div class="warning">&#9888; Do not close this file without saving. All answers will be lost.</div>
+<div class="meta-card">
+  <h2>Inspection Details</h2>
+  <div class="meta-grid">
+    <div class="meta-field"><label>Vessel Name</label><input type="text" name="vessel" placeholder="e.g. Bourbon Evolution 805"></div>
+    <div class="meta-field"><label>Inspection Date</label><input type="date" name="insp_date"></div>
+    <div class="meta-field"><label>Inspector</label><input type="text" name="inspector" placeholder="Name"></div>
+    <div class="meta-field"><label>Operator</label><input type="text" name="operator" placeholder="Company"></div>
+    <div class="meta-field"><label>Flag State</label><input type="text" name="flag" placeholder="Flag"></div>
+    <div class="meta-field"><label>IMO Number</label><input type="text" name="imo" placeholder="IMO #"></div>
+    <div class="meta-field"><label>Port / Location</label><input type="text" name="port" placeholder="Location"></div>
+    <div class="meta-field"><label>Block / Field</label><input type="text" name="block" placeholder="e.g. Block 17"></div>
+    <div class="meta-field full"><label>Inspection Status</label>
+      <select name="status"><option>In Progress</option><option>Completed</option><option>Suspended</option></select>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">1 -- ROB at Mobilization</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">1.1</span>
+    <span class="q-text">If inspection takes place during vessel mobilization, inspector shall issue an ROB survey statement covering, when relevant, all bunker, dry and liquid bulk tanks. Note that ballast, lubes, bilge and sludge tanks shall not be surveyed.</span>
+  </div>
+  <div class="guidance">Complete ROB survey as required. Record quantities for all bunker, dry and liquid bulk tanks only.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q1_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q1_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q1_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q1_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q1_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">2 -- Hull and Marking</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.1</span>
+    <span class="q-text">Are the names of vessel and home port legible?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.2</span>
+    <span class="q-text">Are freeboard marks legible?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.3</span>
+    <span class="q-text">Are the hull, weather decks and superstructure free from visible structural defects that warrant further investigation?</span>
+  </div>
+  <div class="guidance">Inspection of the hull should include checking for any evidence of structural problems including damage from collision / jetty contact or distortion from heavy weather. The void space ahead of the collision bulkhead should be inspected from the outside, to check structural damages.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">2.4</span>
+    <span class="q-text">Is hull clean without concretions?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q2_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q2_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q2_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q2_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q2_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">3 -- Deck and Mooring</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.1</span>
+    <span class="q-text">Is bow fendering in good condition?</span>
+  </div>
+  <div class="guidance">Only purpose designed Watercrafts shall be used for personnel transfers via boat landings. Design includes the shape of the bow and its structural reinforcement to fit the boat landing and sustain the associated thrust, the bow fendering, the bow access steps, handrails and sufficient propulsion power to keep position while in boat landing structure (i.e. without sliding or changing heading). As feasible, the minimum clearance of 30cm between bow fender and boat landing ladder should be checked. A flattened fender will reduce the clearance accordingly.<div class="ref">GS-OT-OPP-842 &#167;5.1; GS-OT-STR-901</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.2</span>
+    <span class="q-text">Is vessel's fendering available and in good condition?</span>
+  </div>
+  <div class="guidance">Fenders securing arrangements such as pad eyes and chains should be checked.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.3</span>
+    <span class="q-text">Are mooring points in good condition?</span>
+  </div>
+  <div class="guidance">Bollards and mooring cleats shall be free of corrosion and crack. In case of bolt connection, bolting shall be properly tightened and corrosion free.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.4</span>
+    <span class="q-text">Are all mooring ropes, including spares in good condition?</span>
+  </div>
+  <div class="guidance">Mooring ropes shall be properly stored when not used. They shall be kept away from moisture and dust. Mooring ropes inspection shall be recorded. Discard criteria shall be available and known from the crew.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.5</span>
+    <span class="q-text">Are mooring chains and anchors in good condition, properly stored and readily accessible?</span>
+  </div>
+  <div class="guidance">The anchoring arrangement shall be consistent with the area of operations and the limitations known by the crew (i.e. maximum water depth for anchoring).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.6</span>
+    <span class="q-text">Is boat hook readily available and in good condition?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.7</span>
+    <span class="q-text">Is cargo securing equipment available, in good condition and marked as necessary?</span>
+  </div>
+  <div class="guidance">Deck area shall be fitted with securing points for cargo lashing.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.8</span>
+    <span class="q-text">Is the maximum cargo load indicated on deck (dimensions and weight)?</span>
+  </div>
+  <div class="guidance">Deck cargo capacity shall also be compliant with technical requirements of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.9</span>
+    <span class="q-text">As required in the contract, is the deck area certified for the carriage of dangerous goods?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.10</span>
+    <span class="q-text">Are closing and securing arrangements of all openings in good condition to prevent the ingress of water whilst at sea?</span>
+  </div>
+  <div class="guidance">Weathertight doors and ventilation covers shall be checked including gasket, handle and possible distortion. Condition of skylight coverings, vent and sounding pipes shall also be checked.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">3.11</span>
+    <span class="q-text">Is deck lighting sufficient and in good working order?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q3_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q3_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q3_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q3_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q3_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">4 -- Transfer Area</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.1</span>
+    <span class="q-text">Is the anti-slip material of the deck surface in good condition?</span>
+  </div>
+  <div class="guidance">The deck surface, shall be non-slip by design, coatings, or any other method. This includes non-slip paint, serrated grating or rubber mats.<div class="ref">GS-OT-OPP-842 &#167;4.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.2</span>
+    <span class="q-text">Are bow access steps in good condition?</span>
+  </div>
+  <div class="guidance">Bow access steps shall be free of corrosion and crack, be non-slip by design and free of obstruction.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.3</span>
+    <span class="q-text">Are bow access handrails in good condition?</span>
+  </div>
+  <div class="guidance">Bow access handrails shall be free of corrosion and crack.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.4</span>
+    <span class="q-text">Is the passenger lifeline between passenger's cabin and transfer platform at bow in good condition?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.5</span>
+    <span class="q-text">Is deck area for personnel transfer free from obstructions with sufficient room for A/B to provide assistance?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">4.6</span>
+    <span class="q-text">Are lifebuoys available at personnel transfer area?</span>
+  </div>
+  <div class="guidance">Both embarkation and disembarkation areas shall be provided with readily available lifebuoys.<div class="ref">GS-OT-OPP-842 &#167;4.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q4_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q4_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q4_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q4_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q4_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">5 -- Pollution Prevention</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.1</span>
+    <span class="q-text">Is fuel bunkering system well maintained to avoid leaks and fuel contamination?</span>
+  </div>
+  <div class="guidance">Condition of valves, filters, goosenecks air vents, spill gates and drain cock shall be checked.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.2</span>
+    <span class="q-text">Are fuel bunkering procedures available on board, known and understood by the crew?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.3</span>
+    <span class="q-text">Is the oil record book properly maintained?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.4</span>
+    <span class="q-text">If water pollutant liquid (e.g. chemical, oily water, dirty oil) is stored on deck, are jerry cans in good condition and satisfactorily fastened?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.5</span>
+    <span class="q-text">Is garbage segregation implemented and garbage record book properly maintained?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">5.6</span>
+    <span class="q-text">Is anti-pollution kit available and provided with sufficient material to manage a fuel leakage on board?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q5_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q5_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q5_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q5_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q5_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">6 -- Safety</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.1</span>
+    <span class="q-text">Are escape ways free of obstruction and properly labelled as per the evacuation plan?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.2</span>
+    <span class="q-text">Are safety pictograms (e.g. muster point, firefighting equipment, PPE requirements) legible and in the correct location as per the safety plan?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.3</span>
+    <span class="q-text">Are muster lists displayed onboard?</span>
+  </div>
+  <div class="guidance">The muster list shall show the duties assigned to the different members of the crew including preparation/launching of life saving appliances, muster of passengers and firefighting. The muster list shall be prepared before the ship proceeds to sea.<div class="ref">SOLAS CHAP III Reg 37</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.4</span>
+    <span class="q-text">Are lifebuoys in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">Lifebuoys shall be so distributed as to be readily available on both sides of the ship. At least one shall be placed in the vicinity of the stern. Lifebuoys shall be so stowed as to be capable of being rapidly cast loose, and not permanently secured in any way. Each lifebuoy shall be marked in block capitals of the Roman alphabet with the name and port of registry of the ship on which it is carried.<div class="ref">SOLAS CHAP III - Reg 7.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.5</span>
+    <span class="q-text">Are liferafts available on board in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">The aggregate capacity of the liferafts shall accommodate the total number of persons on board.<div class="ref">SOLAS CHAP III Reg 31; Marine Feedback LSO/MAR - Crew boat capsized - (05th Feb 2025)</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.6</span>
+    <span class="q-text">Are hydrostatic releases, where fitted, correctly attached?</span>
+  </div>
+  <div class="guidance">Each liferaft shall be stowed with its painter permanently attached to the ship with a float free arrangement so that it inflates automatically when the ship sinks.<div class="ref">SOLAS CHAP III Reg 13.4</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.7</span>
+    <span class="q-text">Are liferafts in good order, within due date and operating instructions clearly posted?</span>
+  </div>
+  <div class="guidance">Posters or signs shall be provided on or in the vicinity of survival craft and their launching controls and shall: Illustrate the purpose of the controls and the procedures for operating the appliance and give relevant instructions or warnings; Be easily seen under emergency lighting conditions.<div class="ref">SOLAS CHAP III Reg 9</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.8</span>
+    <span class="q-text">Is the crew able to satisfactorily demonstrate how to launch liferaft?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.9</span>
+    <span class="q-text">As required, are liferafts embarkation ladders in good condition?</span>
+  </div>
+  <div class="guidance"><div class="ref">SOLAS CHAP III Reg 11</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.10</span>
+    <span class="q-text">Are lifejackets in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">Lifejackets used for escape and evacuation from Watercrafts used for personnel transfer and/or accommodation shall be compliant with LSA Code. Lifejackets shall be fitted with a light compliant with LSA Code. Lifejackets shall be so placed as to be readily accessible and their position shall be plainly indicated.<div class="ref">GS OT OPP 846 &#167;4.1; SOLAS CHAP III - Reg 7.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.11</span>
+    <span class="q-text">Are pyrotechnics in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">Not less than 12 rocket parachute flares shall be carried and stowed on or near the navigation bridge. Hand flares and buoyant smoke signals shall be carried as per flag requirements.<div class="ref">SOLAS CHAP III - Reg 6.3</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.12</span>
+    <span class="q-text">Is the public address system operational?</span>
+  </div>
+  <div class="guidance">System shall be audible on deck and at personnel transfer area.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.13</span>
+    <span class="q-text">Is the general alarm operational?</span>
+  </div>
+  <div class="guidance">The general emergency alarm system shall be audible throughout all the accommodation and normal crew working spaces.<div class="ref">SOLAS CHAP III - Reg 6.4</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.14</span>
+    <span class="q-text">Is the fire pump and associated pipe and valves in good condition and operational?</span>
+  </div>
+  <div class="guidance">Fire pump(s) shall be tested. This includes shaft driven fire pump if fitted.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.15</span>
+    <span class="q-text">Are fire hoses in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.16</span>
+    <span class="q-text">Is the fire monitor operational and in good condition?</span>
+  </div>
+  <div class="guidance">Fire monitor shall be satisfactorily tested.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_16" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_16" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_16" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_16" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_16" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.17</span>
+    <span class="q-text">As applicable, is the deluge system fitted around superstructures operational?</span>
+  </div>
+  <div class="guidance">Deluge shall be tested.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_17" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_17" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_17" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_17" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_17" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.18</span>
+    <span class="q-text">Are fire extinguishers in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">Instructions for use shall be available. The inspection date shall be valid.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_18" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_18" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_18" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_18" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_18" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.19</span>
+    <span class="q-text">Is the ventilation emergency stop operational and known by crew?</span>
+  </div>
+  <div class="guidance">The emergency stop of ventilation shall be tested.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_19" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_19" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_19" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_19" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_19" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.20</span>
+    <span class="q-text">Are remote quick closing valves operational?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_20" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_20" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_20" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_20" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_20" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.21</span>
+    <span class="q-text">Is the engine room fixed firefighting system fully operational, in good condition and maintained/certified as required?</span>
+  </div>
+  <div class="guidance">Step by step procedures shall be posted. Crew shall be able to explain how to use the system. System shall be maintained and inspected as per manufacturer's recommendations.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_21" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_21" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_21" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_21" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_21" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.22</span>
+    <span class="q-text">Is fire detection system fully operational with detection zones clearly identified on the system?</span>
+  </div>
+  <div class="guidance">No zone shall be inhibited.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_22" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_22" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_22" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_22" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_22" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.23</span>
+    <span class="q-text">Are fire detectors in good condition in all compartments?</span>
+  </div>
+  <div class="guidance">Fire detection systems shall be randomly tested (e.g. smoke/heat detectors) as well as fire alarm push button.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_23" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_23" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_23" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_23" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_23" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.24</span>
+    <span class="q-text">As applicable, are fireman's suits and Self-Contained Breathing Apparatus in good condition and properly stored in the correct location as per the safety plan?</span>
+  </div>
+  <div class="guidance">Donning of equipment and knowledge of the crew shall be demonstrated during a drill.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_24" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_24" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_24" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_24" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_24" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.25</span>
+    <span class="q-text">Are inspections/maintenance of the lifesaving and firefighting equipment done as per the established weekly and monthly schedule?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_25" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_25" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_25" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_25" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_25" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">6.26</span>
+    <span class="q-text">Are emergency drills being carried out as required?</span>
+  </div>
+  <div class="guidance">Emergency drills shall include fire, flooding, abandon, medical evacuation, man overboard recovery, pollution, grounding, collision.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q6_26" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q6_26" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q6_26" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q6_26" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q6_26" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">7 -- Passenger Area</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.1</span>
+    <span class="q-text">Are watertight doors and windows in passenger compartment in good condition?</span>
+  </div>
+  <div class="guidance">Check evidence of potential water ingress.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.2</span>
+    <span class="q-text">Is lighting in passenger area sufficient and in good condition?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.3</span>
+    <span class="q-text">Are means for broadcasting safety video briefing on personnel transfer procedures and safety rules applying on board readily available?</span>
+  </div>
+  <div class="guidance">All personnel to be transferred shall be given full briefing and instructions with respect to the expectations and step by step procedures specific to the planned transfer method.<div class="ref">GS-OT-OPP-842 &#167;4.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.4</span>
+    <span class="q-text">Is ventilation and/or air conditioning system in passenger area operational and blowing a clean air free from moisture and particles (dust, corrosion..)?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.5</span>
+    <span class="q-text">Is the certified maximum number of Personnel On Board consistent with the technical requirement of the contract?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.6</span>
+    <span class="q-text">Is maximum Personnel On Board clearly marked in passenger area?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.7</span>
+    <span class="q-text">Are mats, curtains, ceilings and lining in passenger area in good condition?</span>
+  </div>
+  <div class="guidance">Floor of passenger's compartment shall be non-slippery.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.8</span>
+    <span class="q-text">Are passenger seats in good condition?</span>
+  </div>
+  <div class="guidance">Each passenger shall have individual seat. Seats shall be provided with safety belts.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.9</span>
+    <span class="q-text">Are sickness bags available in passenger area?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.10</span>
+    <span class="q-text">Are safety instructions leaflet, or equivalent, available at each seat?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.11</span>
+    <span class="q-text">If fitted, are tables / shelves in good condition?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.12</span>
+    <span class="q-text">Are there sufficient sanitary facilities for passengers, in good working and cleanliness condition?</span>
+  </div>
+  <div class="guidance">Toilets shall be accessible to passengers during their stay on board.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.13</span>
+    <span class="q-text">Are electrical cabinets closed and marked?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.14</span>
+    <span class="q-text">Is the passenger area free of loose items and obstructions?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.15</span>
+    <span class="q-text">As required, is a stretcher available onboard?</span>
+  </div>
+  <div class="guidance">Passengers' area should be able to accommodate the stowing and lashing of a stretcher to transfer injured personnel together with medical team.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.16</span>
+    <span class="q-text">Is a cardiopulmonary resuscitation (CPR) equipment available onboard?</span>
+  </div>
+  <div class="guidance">The passenger area shall be provided with one automated external defibrillator certified for use in European Union or USA and maintained as per manufacturer recommendations (e.g. battery and electrode replacement).</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_16" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_16" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_16" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_16" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_16" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.17</span>
+    <span class="q-text">Is a first aid kit available on board with full inventory?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_17" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_17" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_17" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_17" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_17" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.18</span>
+    <span class="q-text">Is the evacuation plan posted in passenger compartment?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_18" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_18" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_18" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_18" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_18" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">7.19</span>
+    <span class="q-text">Are door coamings painted in high visibility color to avoid personnel tripping?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q7_19" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q7_19" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q7_19" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q7_19" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q7_19" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">8 -- Navigation</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.1</span>
+    <span class="q-text">If the vessel has restricted navigation notation in her statutory certificates, is it known and applied by crew?</span>
+  </div>
+  <div class="guidance">The navigation restriction shall be compatible with the minimum technical requirements of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.2</span>
+    <span class="q-text">Are all bridge windows in good condition and providing sufficient visibility?</span>
+  </div>
+  <div class="guidance">Front windows shall be fitted with wipers. All windows including skylight shall be checked for cleanliness and water tightness. In case of operations below aerial obstructions (e.g. platform cantilever), skylight should be part of the minimum technical requirements of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.3</span>
+    <span class="q-text">Are seats on the bridge in good condition?</span>
+  </div>
+  <div class="guidance">The seated position shall be ergonomic and comfortable to perform 12 hours watch.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.4</span>
+    <span class="q-text">Does the Master have direct visibility on the personnel transfer area while seated at steering position?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.5</span>
+    <span class="q-text">Is the video camera recording system pointing the personnel transfer area operational?</span>
+  </div>
+  <div class="guidance">All Watercrafts involved in personnel transfer operations shall be provided with a video recording camera pointing at the transfer area. Recording video camera performance standards should meet the location and environment constraints (wide lens angle to fully capture the transfer area, dynamic lens to accommodate low visibility or high contrast environment, sufficient memory card capacity to retrieve video record ashore, sufficient video frame rate to play back in slow motion).<div class="ref">GS-OT-OPP-842-4.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.6</span>
+    <span class="q-text">Is the bridge covered by video recording system?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with video camera to record activity at bridge location. Recording video camera performance standards shall meet the location and environment constraints (wide lens angle to fully capture the area, dynamic lens to accommodate low visibility or high contrast environment, storage capacity of 30 days / 720 hours with sufficient video frame rate to play back in slow motion).<div class="ref">Memo LSO/MAR - Crew boats - Additional technical requirement (27th Nov 2023)</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.7</span>
+    <span class="q-text">Is the procedure for retrieving video records known from the crew and regularly tested?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.8</span>
+    <span class="q-text">Is all navigation equipment fully operational and free from defects?</span>
+  </div>
+  <div class="guidance">Vessel shall be fitted with: One electronic chart reader maintained updated to last available notice to mariners; One AIS; One radar fitted with ARPA and interfaced with AIS receiver. The manufacturer's instructions/manual shall be available on board and the equipment maintained accordingly.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.9</span>
+    <span class="q-text">Is the crew familiar with the correct operation of the navigation equipment?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.10</span>
+    <span class="q-text">Is there evidence of position fixing being carried out for the entire voyage?</span>
+  </div>
+  <div class="guidance">The crew shall show evidence of replay of previous voyages on electronic chart reader or positions plots on paper charts to demonstrate compliance with passage plannings.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.11</span>
+    <span class="q-text">Is all radio communication equipment fully operational and free from defects?</span>
+  </div>
+  <div class="guidance">Crew boat shall carry: A VHF radio capable to initiate the transmission of distress alerts on channel 70 from the position from which the ship is normally navigated; Two or three two-way portable VHF for use in the survival craft; An AIS; A radar SART; A NAVTEX receiver if engaged on voyages in NAVTEX area; A satellite EPIRB. GMDSS area certification shall be consistent with area of operations. Additional communication equipment (e.g. additional VHF, email, mobile phone 4G, satellite phone) shall be available as per technical requirements of the contract.<div class="ref">Marine Feedback LSO/MAR - Crew boat capsized - (05th Feb 2025)</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.12</span>
+    <span class="q-text">Is the crew familiar with the radio equipment?</span>
+  </div>
+  <div class="guidance">The crew shall demonstrate the correct use of radio equipment in distress or emergency situation.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.13</span>
+    <span class="q-text">Are searchlight and night vision cameras in good working order?</span>
+  </div>
+  <div class="guidance">Vessel shall be provided with one searchlight. One night vision camera shall be available as per the technical requirements of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.14</span>
+    <span class="q-text">Does the vessel receive navigation warnings and weather forecast?</span>
+  </div>
+  <div class="guidance">Navigation warnings received from hydrographic offices or site-specific warnings received from Company shall be recorded and known by the crew.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.15</span>
+    <span class="q-text">Did the bridge watch officer complete the on-line assessment questionnaire on COLREG with a minimum result of 80%?</span>
+  </div>
+  <div class="guidance">CONTRACTOR shall enroll in Ocean Technology (https://oceantg.com/) or Mintra (https://mintra.com/). Each bridge watch officer shall perform the e-learning modules on COLREGs and pass the on-line assessment questionnaire with a minimum result of 80%. This certification shall be renewed at 2.5 years interval.<div class="ref">Memo LSO/MAR - Crew boats - Additional technical requirement (27th Nov 2023)</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.16</span>
+    <span class="q-text">Is bridge fitted with binoculars and basic navigation set?</span>
+  </div>
+  <div class="guidance">The basic navigation set shall include parallel rule and divider. The quality of binoculars shall be tested to ensure their suitability for performing visual watch at sea.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_16" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_16" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_16" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_16" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_16" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.17</span>
+    <span class="q-text">Is the bridge logbook correctly filled in?</span>
+  </div>
+  <div class="guidance">Logbook shall include navigational activities and incidents that are important for safety of navigation and shall contain enough detail to restore a complete record of the voyage.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_17" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_17" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_17" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_17" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_17" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.18</span>
+    <span class="q-text">Does the vessel have up to date charts covering all operation area?</span>
+  </div>
+  <div class="guidance">This shall also include the updating of electronic chart reader. A log of all corrections that have been made to the charts on board the vessel shall be maintained, and the six-monthly cumulative List of Admiralty Notices to Mariners (NP234) should be used to check this log to ensure that all applicable corrections have been made.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_18" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_18" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_18" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_18" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_18" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.19</span>
+    <span class="q-text">Does the vessel have passage planning covering its operation area?</span>
+  </div>
+  <div class="guidance">Passage plans shall be completed in detail from berth to berth and signed by the bridge team.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_19" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_19" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_19" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_19" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_19" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.20</span>
+    <span class="q-text">Are machinery and propulsion information display panel operational?</span>
+  </div>
+  <div class="guidance">All indicators (e.g. rudder angle, RPM) should be readable from the conning position.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_20" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_20" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_20" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_20" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_20" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.21</span>
+    <span class="q-text">Is the echo sounder fully operational?</span>
+  </div>
+  <div class="guidance">Bridge officer(s) shall be capable to demonstrate the correct use of echo sounder.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_21" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_21" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_21" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_21" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_21" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.22</span>
+    <span class="q-text">Is personnel on board (POB) monitored and recorded?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_22" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_22" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_22" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_22" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_22" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.23</span>
+    <span class="q-text">Is a crew boat provided with a computer or tablet able to support NAVIGARE?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_23" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_23" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_23" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_23" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_23" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.24</span>
+    <span class="q-text">Is the vessel provided with a Simplified Voyage Data Recorder (S-VDR)?</span>
+  </div>
+  <div class="guidance">Vessel shall be fitted with a Simplified Voyage Data Recorder (S-VDR), IMO type approved meeting the performance standards of IMO MSC.163(78) and MSC.214(81). The long-term recording medium shall retain data for at least 30 days/720 hours. S-VDR shall be subject to an annual performance test by a service company approved by the manufacturer.<div class="ref">Memo LSO/MAR - Crew boats - Additional technical requirement (27th Nov 2023)</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_24" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_24" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_24" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_24" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_24" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.25</span>
+    <span class="q-text">Are navigation lights in good working order?</span>
+  </div>
+  <div class="guidance">This includes primary and secondary systems.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_25" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_25" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_25" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_25" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_25" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">8.26</span>
+    <span class="q-text">Are there any loose items on the upper bridge?</span>
+  </div>
+  <div class="guidance">Any equipment liable to drop shall be double secured by wire or equivalent device.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q8_26" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q8_26" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q8_26" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q8_26" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q8_26" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">9 -- Machinery</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.1</span>
+    <span class="q-text">Is the engine compartment access in good condition and properly labelled?</span>
+  </div>
+  <div class="guidance">Access to engine compartment shall be safe and restricted to authorized personnel. Door and ladder shall be in good condition with labels showing minimum PPE required and restricted access.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.2</span>
+    <span class="q-text">Is lighting in the engine compartment sufficient and in good condition?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.3</span>
+    <span class="q-text">Is emergency lighting operational and properly identified?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.4</span>
+    <span class="q-text">Are machinery spaces clean, tidy and well maintained without oil / fuel / hydraulic oil leakage?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.5</span>
+    <span class="q-text">Are various electrical cabinets in good condition, properly closed and marked?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.6</span>
+    <span class="q-text">Are the two sets of propulsion fully operational and free from defects?</span>
+  </div>
+  <div class="guidance">Only Watercrafts fitted with a minimum of two sets of propulsion shall be used for personnel transfers. One set of propulsion includes, as applicable, one engine, one reducer, one propeller and steering gear or jet.<div class="ref">GS-OT-OPP-842-4.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.7</span>
+    <span class="q-text">Is auxiliary machinery fully operational and free from defects?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.8</span>
+    <span class="q-text">Is the electronic fuel consumption monitoring device in good working order?</span>
+  </div>
+  <div class="guidance">Equipment shall be installed as per technical requirement of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.9</span>
+    <span class="q-text">Is the ultrasonic anti-fouling device in good working order?</span>
+  </div>
+  <div class="guidance">Equipment shall be installed as per technical requirement of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.10</span>
+    <span class="q-text">Is bilge alarm and pumping system operational in all compartments?</span>
+  </div>
+  <div class="guidance">Bilge shall be empty and free of oily residue.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.11</span>
+    <span class="q-text">Is the crew able to demonstrate how to operate the bilge pumping system in case of flooding?</span>
+  </div>
+  <div class="guidance">The emergency bilge overboard valve shall not be padlocked but sealed with breakable tie wrap.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.12</span>
+    <span class="q-text">Are engine compartment gratings suitably bolted?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.13</span>
+    <span class="q-text">Does the engineer know how to install fuel filter without causing crack on the cartridge?</span>
+  </div>
+  <div class="guidance">The tightening of a cartridge fuel filter shall be done by hand only and not using the filter spanner. Cracks resulting from mishandling led to fuel spraying and several fire incidents in engine compartments. As an extra mitigation measure, fuel cartridge filters should be protected by protective casing.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_13" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_13" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_13" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_13" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_13" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.14</span>
+    <span class="q-text">Are the engine ventilation fans in good working order and condition?</span>
+  </div>
+  <div class="guidance">This includes the condition of flaps and ventilation grids. Inspector shall check the closure of engine and accommodation flaps/dampers when ventilation is stopped.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_14" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_14" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_14" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_14" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_14" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.15</span>
+    <span class="q-text">Are batteries (starting, radio, emergency) in good condition and properly stored?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_15" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_15" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_15" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_15" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_15" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.16</span>
+    <span class="q-text">Are maintenance records available for onboard equipment?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_16" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_16" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_16" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_16" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_16" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">9.17</span>
+    <span class="q-text">Are machinery equipment operating manuals available to the crew?</span>
+  </div>
+  
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q9_17" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q9_17" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q9_17" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q9_17" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q9_17" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="section">
+  <div class="section-title">10 -- Operations</div>
+  
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.1</span>
+    <span class="q-text">Is the manning level sufficient for the vessel's operations?</span>
+  </div>
+  <div class="guidance">Affiliate shall verify that Watercraft manning level and crew competency is aligned with the duties it is contracted for and comply, as and when applicable, as a minimum, with ISM Code and STCW. The affiliate Marine Advisor approves a risk assessment performed in conjunction with the Watercraft Technical Operator, to determine the appropriate manning level, crew qualifications and competencies for the planned operations.<div class="ref">CR-OT-OPP-840 - Rule 27</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_1" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_1" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_1" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_1" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_1" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.2</span>
+    <span class="q-text">Is crew aware of the personnel transfer decision matrix?</span>
+  </div>
+  <div class="guidance">A decision matrix, specific to the personnel transfer method and local environment shall be prepared and implemented. The decision matrix is to be used as a facilitating tool by the responsible parties overseeing the transfer operations to decide when to continue or abort a transfer operation based on the prevailing sea and weather conditions, human factors and condition of equipment. However, the Watercraft captain has the over-riding authority and responsibility to make all decisions as seen fit related to the safety of personnel, assets and the environment.<div class="ref">GS-OT-OPP-842 - &#167;4.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_2" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_2" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_2" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_2" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_2" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.3</span>
+    <span class="q-text">Is the crew able to explain the man overboard procedure and the use of recovery equipment?</span>
+  </div>
+  <div class="guidance">The procedure shall be reviewed to assess its suitability and efficiency (including the notification and coordination with Company). Should a dummy be available, a full man overboard drill shall be performed. The unconscious man overboard recovery device and Jason cradle shall be available as per the technical requirements of the contract.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_3" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_3" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_3" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_3" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_3" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.4</span>
+    <span class="q-text">Is the A/B fully aware of his/her duty?</span>
+  </div>
+  <div class="guidance">The A/B at the personnel transfer area shall be provided with a portable hand-free loudspeaker and shall use standardized orders for giving transfer instructions. He shall check that transferred personnel wear closed shoes and lifejacket. He shall make sure that all transferred personnel have both hands-free during transfer and don't carry any bag on the shoulders. He shall check that only one person is allowed on the boat landing at the time.<div class="ref">GS-OT-OPP-842 - &#167;5.1</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_4" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_4" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_4" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_4" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_4" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.5</span>
+    <span class="q-text">Are radiocommunications established and maintained during personnel transfer operations?</span>
+  </div>
+  <div class="guidance">Radio communications between the personnel involved, on both the transferring and receiving Watercrafts or installation, shall be established prior to and maintained during transfer operations. Communications should be verified at regular intervals throughout the transfer operation.<div class="ref">GS-OT-OPP-842 - &#167;4.2</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_5" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_5" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_5" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_5" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_5" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.6</span>
+    <span class="q-text">Does the vessel conduct required verifications prior to entry into the 500 meters zone?</span>
+  </div>
+  <div class="guidance">Prior to entry, crew shall: Satisfactorily test steering system and engine astern; Review metocean conditions to assess drifting and most suitable heading to approach; Be granted authorization for entry from the installation.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_6" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_6" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_6" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_6" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_6" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.7</span>
+    <span class="q-text">Does the crew know additional principles to avoid collision with the installation?</span>
+  </div>
+  <div class="guidance">Crew shall review and plan the tidal effect on the height of the vessel compared to aerial obstructions on the installation and height of the vessel personnel transfer platform compared to maximum/minimum elevation of boat landing structure. This shall also include the effect of maximum waves height. Crew shall regularly check that the electronic chart reader is operational. Crew shall not stand-by in 500m zone (in particular to remain within reach of wifi). Crew shall minimize their stay at the personnel transfer area of the installation to remain focused and fully concentrated on the safety of the personnel transfer and station keeping.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_7" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_7" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_7" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_7" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_7" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.8</span>
+    <span class="q-text">Is the Company safety culture program known and implemented by the crew?</span>
+  </div>
+  <div class="guidance">This includes elements like golden rules for safety, stop work authority, life saving checks, joint safety tours, safety green light. This shall include posters or equivalent communication media displayed on board to remind program to all personnel.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_8" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_8" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_8" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_8" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_8" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.9</span>
+    <span class="q-text">Are safety observation regularly reported to Company or Contractor?</span>
+  </div>
+  <div class="guidance">It shall be a duty routine for the crew to report anomalies.</div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_9" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_9" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_9" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_9" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_9" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.10</span>
+    <span class="q-text">Is the crew provided with inflatable lifejackets compliant with minimum Company requirements?</span>
+  </div>
+  <div class="guidance">Crew of Watercrafts engaged in personnel transfer operations shall wear an inflatable lifejacket compliant with LSA Code. Inflatable lifejacket shall be of performance level 275, fitted with a hydrostatic inflation system (automatic and manual), and fitted with a light compliant with LSA Code. As a preference, light should be of an "automatic activation when in water" type. The performance level 275 is not defined by LSA Code but in ISO 12402-2.<div class="ref">GS-OT-OPP-846 &#167;6</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_10" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_10" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_10" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_10" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_10" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.11</span>
+    <span class="q-text">Are the inflatable lifejackets worn only outside of the accommodation?</span>
+  </div>
+  <div class="guidance">Inflatable lifejacket shall not be worn in closed spaces where it can impair the evacuation in case of flooding. Closed spaces refer for example to internal spaces of Watercrafts.<div class="ref">GS-OT-OPP-846 &#167;6</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_11" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_11" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_11" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_11" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_11" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+<div class="question">
+  <div class="q-header">
+    <span class="q-num">10.12</span>
+    <span class="q-text">Are the inflatable life jackets maintained, and history recorded in a register?</span>
+  </div>
+  <div class="guidance">Inflatable life jackets shall be serviced and certified annually, or less if required by the manufacturer, by a company approved by the manufacturer. An inflatable lifejacket register shall be maintained to consolidate the maintenance history and certification status of each lifejacket.<div class="ref">GS-OT-OPP-846 &#167;6</div></div>
+  <div class="answer-row">
+    <label class="ans yes-lbl"><input type="radio" name="q10_12" value="YES"> &#10003; YES</label>
+    <label class="ans no-lbl"><input type="radio" name="q10_12" value="NO"> &#10007; NO</label>
+    <label class="ans na-lbl"><input type="radio" name="q10_12" value="NA"> N/A</label>
+  </div>
+  <div class="obs-row">
+    <label><input type="checkbox" name="obs_q10_12" value="1"> &#9888; Observation / Finding</label>
+  </div>
+  <textarea name="cmt_q10_12" placeholder="Comment / Evidence..." rows="2"></textarea>
+</div>
+</div>
+<div class="general-obs">
+  <h3>&#9888; General Observations / Additional Comments</h3>
+  <textarea name="general_obs" placeholder="Overall inspection notes, summary of findings, follow-up actions required..." rows="5"></textarea>
+</div>
+<div class="btn-row">
+  <button class="btn btn-save" onclick="saveProgress()">&#128190; Save Progress</button>
+  <button class="btn btn-pdf" onclick="window.print()">&#128438; Export PDF</button>
+</div>
+<script>
+
+function saveProgress() {
+  var html = document.documentElement.outerHTML;
+  // Injecter les valeurs des radios
+  var radios = document.querySelectorAll('input[type=radio]');
+  for (var i = 0; i < radios.length; i++) {
+    var r = radios[i];
+    if (r.checked) {
+      html = html.replace(
+        'name="' + r.name + '" value="' + r.value + '"',
+        'name="' + r.name + '" value="' + r.value + '" checked'
+      );
+    }
+  }
+  // Injecter les checkboxes
+  var checks = document.querySelectorAll('input[type=checkbox]');
+  for (var j = 0; j < checks.length; j++) {
+    var cb = checks[j];
+    if (cb.checked) {
+      html = html.replace(
+        'name="' + cb.name + '" value="1"',
+        'name="' + cb.name + '" value="1" checked'
+      );
+    }
+  }
+  // Injecter les valeurs des inputs texte et select
+  var inputs = document.querySelectorAll('input[type=text], input[type=date], select');
+  for (var k = 0; k < inputs.length; k++) {
+    var inp = inputs[k];
+    var val = inp.value.replace(/"/g, '&quot;');
+    if (val) {
+      // Remplacer placeholder ou valeur vide par value=
+      var tag = inp.outerHTML;
+      var newTag = tag.replace('>', ' value="' + val + '">');
+      if (inp.tagName === 'SELECT') {
+        // Pour select, marquer l'option selected
+        newTag = tag.replace('value="' + val + '"', 'value="' + val + '" selected');
+      }
+      html = html.replace(tag, newTag);
+    }
+  }
+  // Injecter les textareas
+  var tas = document.querySelectorAll('textarea');
+  for (var t = 0; t < tas.length; t++) {
+    var ta = tas[t];
+    if (ta.value) {
+      var oldTag = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '"></textarea>';
+      var newTagTA = '<textarea name="' + ta.name + '" placeholder="' + ta.placeholder + '" rows="' + ta.rows + '">' + ta.value.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>';
+      html = html.replace(oldTag, newTagTA);
+    }
+  }
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'inspection_save.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
